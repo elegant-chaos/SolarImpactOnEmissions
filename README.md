@@ -1,2 +1,2 @@
 # SolarImpactOnEmissions
-DDFG 2019; InOurHands.love project
+DDFG 2019: InOurHands.love project
