@@ -1,5 +1,5 @@
 Initial goals:
-- Create calculator that TAKES zip code, building type or square footage, and 
+- Create calculator that TAKES zip code, building type, square footage, and 
   percent of power replaced and RETURNS emissions saved (focus on carbon first)
 
 Stretch goals:
