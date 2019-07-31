@@ -5,3 +5,8 @@ Initial goals:
 Stretch goals:
 - Create cool data viz to quantify the impact. Can include maps, comparisons to 
   other carbon emitting activities. Anything really. 
+
+
+Questions for Thursday:
+- Difference between "Total output emission rates" and "Non-baseload emission rates" (eGrid)?
+- 

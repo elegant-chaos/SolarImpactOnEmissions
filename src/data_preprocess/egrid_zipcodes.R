@@ -5,10 +5,10 @@ library(readxl)
 
 #__________________________________________________
 #use sheet 2(Subregion Output Emission Rates (eGRID2016)), start row at 2 to avoid the title of table
-egrid <- read.xlsx("egrid2016_summarytables.xlsx", 2, startRow=2)
+egrid <- read.xlsx("data/egrid2016_summarytables.xlsx", 2, startRow=2)
 
 #use Zip-subregion sheet in excel file
-zipcode <- read_excel("power_profiler_zipcode_tool_2016_6_14_18._v8.xlsx", 
+zipcode <- read_excel("data/power_profiler_zipcode_tool_2016_6_14_18._v8.xlsx", 
                                                           sheet = "Zip-subregion")
 
 #Reformat imported egrid 
@@ -73,6 +73,9 @@ non_baseload_output_emission_rates<- non_baseload_output_emission_rates%>%
 total_output_emission_rates<- cbind(subregion,total_output_emission_rates,grid_gross_loss)
 
 non_baseload_output_emission_rates<- cbind(subregion,non_baseload_output_emission_rates,grid_gross_loss)
+
+usage_by_building_type <- read_csv("data/Total_usage_building_type.csv")
+zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv")
 
 #__________________________________________________
 
