@@ -17,13 +17,13 @@ loadData <- function() {
     gs_read_csv(sheet)
 }
 
-# Define the fields we want to save from the form
+# User input fields
 fields <- c("zip", "building_type","ind_sq_ft", "sq_ft", "pct_pwr_replaced")
 
-#Temp vars until data is in the table
+# Temp vars until data loaded from EPA
 temp_choices <- c("school", "home", "apartment", "medical (in-patient)", "medical (out-patient)")
 
-# Shiny app with 3 fields that the user can submit data for
+# Shiny App
 shinyApp(
     ui = fluidPage(
         titlePanel("Solar Panel Impact (InOurHands.love)"),
