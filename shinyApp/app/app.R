@@ -20,6 +20,9 @@ loadData <- function() {
 # Define the fields we want to save from the form
 fields <- c("zip", "building_type","ind_sq_ft", "sq_ft", "pct_pwr_replaced")
 
+#Temp vars until data is in the table
+temp_choices <- c("school", "home", "apartment", "medical (in-patient)", "medical (out-patient)")
+
 # Shiny app with 3 fields that the user can submit data for
 shinyApp(
     ui = fluidPage(
@@ -27,17 +30,25 @@ shinyApp(
         
         sidebarLayout(
             sidebarPanel(
-        textInput("zip", "Zip Code", "")
-        #YOU ARE HERE, MAKE THE INPUTS MATCH THE FIELDS LISTED ABOVE 
-        #checkboxInput("used_shiny", "I've built a Shiny app in R before", FALSE),
-        #sliderInput("r_num_years", "Number of years using R",
-        #            0, 25, 2, ticks = FALSE),
-        #actionButton("submit", "Submit")
+        textInput("zip", "Zip Code", ""),
+        selectInput('building_type','Building Type', choices = temp_choices),
+        conditionalPanel(condition = "input.building_type == 'home' | input.building_type == 'apartment'",
+                         selectInput('ind_sq_ft', 'Do you know the square footage of this building?', 
+                                     choices = c('No', 'Yes'))),
+        conditionalPanel(condition = "input.ind_sq_ft == 'Yes'", 
+                         numericInput('sq_ft', 'Square Footage of Building', 1011)),
+        sliderInput('pct_pwr_replaced', "What percent of this building's power comes from renewable energy?", 
+                    min = 1, max = 100, value = 100),
+        actionButton("submit", "Submit to Dataset")
+        
         ),
         mainPanel(
-            DT::dataTableOutput("responses", width = 300), tags$hr()
+            tabsetPanel(type = "tabs",
+                        tabPanel("Placeholder 1"),
+                        tabPanel("Placeholder 2"),
+                        tabPanel("Data Table", DT::dataTableOutput("responses", width = 300), tags$hr())
         ))
-    ),
+    )),
     server = function(input, output, session) {
         
         # Whenever a field is filled, aggregate all form data
