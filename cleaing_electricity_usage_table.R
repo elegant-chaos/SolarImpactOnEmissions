@@ -1,118 +1,81 @@
-library(mmlib)
-source("config.txt")
-
-# Set up vertica 
-
-vertica_setup(server='aws_qa',
-              user=user,
-              password=password)
-
-query = "SELECT label, ibe9350_9350 AS stability,
-ibe7607_Home_Length_of_Residence_TO_100PCT_LOR AS house_residence, 
-ibe7629_Household_Size_Premier_COMPLETE_Size AS house_size,
-ibe1273_Population_Density_Refresh_IBE_Model_PersonicxPopulationDensity_2 AS population_density,
-state,
-ibe7641_Income_Code_Estimated_Household_Premier_COMPLETE_Income AS income,
-Gc142_Prop_Price_Sensitive_Penny_Pinchers_gc142_rank AS price_sensitivity,
-ibe8617_8617 AS age_2, ibe8616_8616 AS age_1,
-ibe8605_8605 AS  occ_2, ibe8604_8604 AS occ_1,
-Gc998_Bank_Fin_Srvc_Mthds_Used_Bank_Online_Internet_gc998_rank AS Perference,
-AP004325_Prop_Not_Majmdcl_Ins_ap004325_rank AS Insurance ,
-Mn1850_Prop_Own_Apple_Iphone_mn1850_rank_base_10 AS Iphone,
-Gc2227_Retirement_Or_College_Savings_Plans_Ira_Any_gc2227_rank saving_option,
-ibe7469_7469 AS new_parent,
-ibe8652_8652 AS generation_range, 
-ibe7629_Household_Size_Premier_COMPLETE_Precisioin_Level AS household_size,
-ibe7602_Children_Number_in_Household_Premier_COMPLETE_Children AS num_child,
-ibe3101_3101 AS race_gen, 
-ibe9514_9514 AS education, 
-ibe8628_8628 AS num_adults, 
-ibe8622_8622 AS presence_of_child,
-ibe8610_IBE_Premier_NameGenderof1stIndividual_Gender AS gender_1,
-ibe8612_IBE_Premier_NameGenderof2ndIndividual_Gender AS gender_2,
-ibe8609_8609 AS marital_status, 
-ibe8606_8606 AS home_ownership, 
-ibe8479_8479 AS networth,
-ibe8463_8463 AS home_market_percentile, 
-ibe7827_7827 AS healthlifestyle, 
-ibe7780_7780 AS grandchild,
-ibe6142_6142 AS women_plussize,
-ibe8692_8692 AS senior_presence,
-ibe8619_8619 AS working_women, 
-ibe7468_7468 AS recent_mortgage_borrower, 
-ibe6436_6436 AS weight_loss,
-ibe6429_6429 AS medical_supplies_beauty,
-ibe6446_6446 AS medical_supplies_senior,
-ibe7722_7722 AS smoking, 
-ibe2351_2351 AS single_parent, 
-ibe2067_2067 AS active_investing
-FROM leads_lab.leads_data"
-data_5=get_query(query)
-
-library(dplyr)
+#loading r-packages
 library(tidyverse)
+library(readxl)
+# set directory to download 
+setwd("~/Downloads")
+#-------------------------------------------------------------------------------
+#  Average building size table
+#-------------------------------------------------------------------------------
+# import excel file from download folder and rename the dataset as Average_size
+Average_size <- read_excel("c13.xlsx")
+# select principal building actvity table rows 16-34, select only the Floor per building column 4
+Average_size= Average_size[c(16:34),c(1,4)]
+# add and create column name 
+Average_size[1,2]="Floorspace per building (thousand square feet)"
+colnames(Average_size) <- as.character(unlist(Average_size[1,]))
+Average_size= Average_size[2:nrow(Average_size),]
+# convert column to numeric 
+Average_size$`Floorspace per building (thousand square feet)`= as.numeric(Average_size$`Floorspace per building (thousand square feet)`)
+
+#-------------------------------------------------------------------------------
+#  Average electricity usage table
+#-------------------------------------------------------------------------------
+# separate table - average electricity usage 
+# import data
+Average_usage <- read_excel("c15.xlsx")
+# select principal building actvity table row (14:32) and select average usage for different regions column 10:13
+Average_usage= Average_usage[c(14:32),c(1,10:13)]
+
+# create and rename colunn names 
+Average_usage[1,1]="Principal building activity"
+Average_usage[1,2]="North_East(kwh/square foot)"
+Average_usage[1,3]="Mid_West"
+Average_usage[1,4]="South"
+Average_usage[1,5]="West"
+colnames(Average_usage) <- as.character(unlist(Average_usage[1,]))
+Average_usage= Average_usage[2:nrow(Average_usage),]
+# convert columns to numeric 
+Average_usage$`North_East(kwh/square foot)`=as.numeric(Average_usage$`North_East(kwh/square foot)`)
+Average_usage$Mid_West=as.numeric(Average_usage$West)
+Average_usage$South=as.numeric(Average_usage$South)
+Average_usage$West=as.numeric(Average_usage$West)
+# fill in missing data 
+replace_missing_data_with_row_mean()
+#-------------------------------------------------------------------------------
+#  Join tables 
+#-------------------------------------------------------------------------------
+#join two tables to get estimated total eletricity usage for different building type
+Total =merge(x=Average_usage,y=Average_size,by="Principal building activity",all=TRUE)
+# create a new column called total usage by multiply average usage with the estimated building size for each region
+# formula 
+# education_type_building_total_usage_northeast = avg_usage_northeast * average_building_size_education 
+Total[[paste('Total_usage_',colnames(Total)[2],sep="")]]= Total[,2]*Total[,6]
+Total[[paste('Total_usage_',colnames(Total)[3],sep="")]]= Total[,3]*Total[,6]
+Total[[paste('Total_usage_',colnames(Total)[4],sep="")]]= Total[,4]*Total[,6]
+Total[[paste('Total_usage_',colnames(Total)[5],sep="")]]= Total[,5]*Total[,6]
+# change building type names and remove Health care and mercantile rows 
+Total[which(Total[,1]=="Inpatient"),1]="Health (inpatient)"
+Total[which(Total[,1]=="Outpatient"),1]= "Health (outpatient)"
+Total = Total[-c(which(Total[,1]=="Health care"), which(Total[,1]=="Mercantile")),]
 
 
-convert_to_factor_initial <- function (df=data_5){
-  for(i in 2:(which(colnames(df)=="healthlifestyle")-1)){ 
-    df[[i]]=as.factor(df[[i]])
-  } 
-  return (df)
-}
+# change the column name to fix the unit at the end 
+colnames(Total)[colnames(Total)=="Total_usage_North_East(kwh/square foot)"] <- "Total_usage_Avg_usage_North_East(thousand kwh)"
+Total = Total[,c(1,7:ncol(Total))]
+write_csv(Total, "Total_usage_building_type.csv")
 
-convert_to_factor <- function (df=data_5){
-  for(i in 2:ncol(df)){ 
-    df[[i]]=as.factor(df[[i]])
-  } 
-  return (df)
-}
-missing_ratio <- function (x, df=data_5){
-  missing= df%>%
-    filter(is.na(df[[x]])) %>%
-    summarise(ratio_missing = round(n()/20658*100))
-  return (missing)
-}
-
-data_5= convert_to_factor_initial(data_5)
-
-
-for(i in 2:ncol(data_5)){ 
-  if(nlevels(data_5[[i]])>1){
-    if (missing_ratio(i)>5){
-      data_5[[paste('null_indi_',colnames(data_5)[i],sep="")]] <- ifelse(is.na(data_5[[i]]) == TRUE ,'missing', 'not_missing')
+#-------------------------------------------------------------------------------
+#  function for replacing missing data
+#-------------------------------------------------------------------------------
+replace_missing_data_with_row_mean <- function (df=Average_usage){
+  for(i in 1:nrow(df)){
+    for(n in 2:ncol(df)){
+      if(is.na(df[i,n])){
+        df[i,n]  <- rowMeans(df[i, 2:ncol(df)], na.rm = TRUE) 
+      }
     }
   }
-  else {
-    data_5[[i]][is.na(data_5[[i]])] = 0
-  }
-} 
-data_5= convert_to_factor(data_5)
-summary(data_5)
-
-table2 <-function(x, df=data_5){
-  temp = data_5 %>%
-    group_by(df[[x]]) %>%
-    summarise(total=n(), converted = sum(label), ratio= mean((label)), converted_percentage = converted / 626, group_ratio = total/20658) %>%
-    arrange((desc(ratio)))
-  return (temp)
 }
-
-for(i in  which(colnames(data_5)=="healthlifestyle") : ncol(data_5)){ 
-  temp3= table(data_5[,i], data_5$label)
-  print(colnames(data_5[i]))
-  print(table2(i))
-  print(chisq.test(temp3))
-}
-
-for(i in  2: ncol(data_5)){ 
-  print(colnames(data_5[i]))
-  print(table(i))
-  temp3= table(data_5[,i], data_5$label)
-  print(chisq.test(temp3))
-}
-
-
-
 
 
 
