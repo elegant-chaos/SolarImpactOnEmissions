@@ -51,3 +51,19 @@ To determine GHG emissions from electricity purchases in GHG inventories or carb
 
 For rough estimates of emission reductions from energy efficiency and/or renewable energy usage -- use eGRID subregion non-baseload output emission rates
 
+## Summary of Variables
+
+Column Name | Description
+------------------ | ----------------
+eGRID.subregion.acronym | acronym to represent the subregion name, and serve as a key to matching location (ie. Zip code) with subregion name
+eGrid.subregion.name | eGRID subregion in U.S associated with specific locations and electric service provider. 
+CO2 | Annual carbon dioxide emission rate in lb/MWh
+CH4 | Annual methane emission rate in lb/MWh
+N2O | Annual nitrous oxide emission rate in lb/MWh
+CO2e | Annual carbon dioxide equivalent emission rate in lb/MWh
+Annual NOx | Annual  nitrogen oxide emission rate in lb/MWh
+Ozone Season NOx | Ozone season nitrogen oxide emission rate in lb/MWh
+SO2 | Annual sulfur dioxide emission rate in lb/MWh
+Grid.Gross.Loss | Estimate of the energy lost in the process of supplying electricity to consumers
+
+
