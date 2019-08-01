@@ -34,11 +34,12 @@ We are using total output emission rates because the EPA’s Power Profiler Emis
 
 For projects that displace marginal fossil fuel generation and are looking to determine emission reduction benefits, non-baseload emission rates are sometimes used. Improving energy efficiency or renewable energy are some examples of these project types. However, non-baseload emission  rates should not be used for estimating emissions associated with electrical use in carbon footprinting exercises or Greenhouse Gas emissions inventory.
 
-
-**Source 2:** "Total, Non-baseload, eGRID Subregion, State - Guidance on the Use of eGRID Output Emission Rates," S. S. Rothschild, E.H. Pechan & Associates; A. Diem, US EPA OAP. April 2009
-**Source 3:** presentation April 2009 
 [website](https://www3.epa.gov/ttn/chief/conference/ei18/)
-[website2](ftp://ftp.epa.gov/EmisInventory/ei_conference/EI18/session5/)
+**Source 2:** "Total, Non-baseload, eGRID Subregion, State - Guidance on the Use of eGRID Output Emission Rates," S. S. Rothschild, E.H. Pechan & Associates; A. Diem, US EPA OAP. April 2009 
+[pdf](https://www3.epa.gov/ttn/chief/conference/ei18/session5/rothschild.pdf)
+
+**Source 3:** presentation April 2009
+[presentation](https://www3.epa.gov/ttnchie1/conference/ei18/session5/rothschild_pres.pdf)
 
 The annual total output emission rate is the measure of the emissions as it relates to the generation output (2). Examples: The EPA’s Power Profiler tool and the EPA’s Personal Emissions Calculator use this data. Such tools give users ability to assess electricity usage impacts, compare fuel mix and air emission rates and estimate carbon footprints. 
 
