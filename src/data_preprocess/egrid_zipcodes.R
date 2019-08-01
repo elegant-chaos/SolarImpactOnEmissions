@@ -74,6 +74,7 @@ total_output_emission_rates<- cbind(subregion,total_output_emission_rates,grid_g
 
 non_baseload_output_emission_rates<- cbind(subregion,non_baseload_output_emission_rates,grid_gross_loss)
 
+# Load commerical building data
 usage_by_building_type <- read_csv("data/Total_usage_building_type.csv")
 zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv")
 
