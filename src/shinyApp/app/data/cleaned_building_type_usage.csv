@@ -1,0 +1,73 @@
+Principal building activity,region,electric_usage
+Education,northeast,274.05
+Enclosed and strip malls,northeast,714.41
+Food sales,northeast,319.5
+Food service,northeast,190.56
+Health care,northeast,583
+Inpatient,northeast,6517.14
+Lodging,northeast,516.6
+Mercantile,northeast,308.07
+Office,northeast,270.18
+Other,northeast,695.52
+Outpatient,northeast,212.96
+Public assembly,northeast,222.78
+Public order and safety,northeast,259.72
+Religious worship,northeast,49.95
+Retail (other than mall),northeast,160
+Service,northeast,49.5
+Vacant,northeast,73.973
+Warehouse and storage,northeast,91.14
+Education,midwest,315
+Enclosed and strip malls,midwest,685.69
+Food sales,midwest,303.17
+Food service,midwest,197.28
+Health care,midwest,651.9
+Inpatient,midwest,8053.5
+Lodging,midwest,520.29
+Mercantile,midwest,332.64
+Office,midwest,235.42
+Other,midwest,326.83
+Outpatient,midwest,173.03
+Public assembly,midwest,208.56
+Public order and safety,midwest,287.24
+Religious worship,midwest,52.17
+Retail (other than mall),midwest,197.5
+Service,midwest,66
+Vacant,midwest,81.76
+Warehouse and storage,midwest,89.28
+Education,south,396.9
+Enclosed and strip malls,south,807.75
+Food sales,south,399.02
+Food service,south,238.56
+Health care,south,781.75
+Inpatient,south,8499.54
+Lodging,south,612.54
+Mercantile,south,372.33
+Office,south,252.8
+Other,south,515.2
+Outpatient,south,262.57
+Public assembly,south,257.54
+Public order and safety,south,314.76
+Religious worship,south,67.71
+Retail (other than mall),south,203.75
+Service,south,73.5
+Vacant,south,58.4
+Warehouse and storage,south,156.24
+Education,west,315
+Enclosed and strip malls,west,685.69
+Food sales,west,303.17
+Food service,west,197.28
+Health care,west,651.9
+Inpatient,west,8053.5
+Lodging,west,520.29
+Mercantile,west,332.64
+Office,west,235.42
+Other,west,326.83
+Outpatient,west,173.03
+Public assembly,west,208.56
+Public order and safety,west,287.24
+Religious worship,west,52.17
+Retail (other than mall),west,197.5
+Service,west,66
+Vacant,west,81.76
+Warehouse and storage,west,89.28

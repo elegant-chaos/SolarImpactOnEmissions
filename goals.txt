@@ -1,7 +1,12 @@
 Initial goals:
-- Create calculator that TAKES zip code, building type or square footage, and 
+- Create calculator that TAKES zip code, building type, square footage, and 
   percent of power replaced and RETURNS emissions saved (focus on carbon first)
 
 Stretch goals:
 - Create cool data viz to quantify the impact. Can include maps, comparisons to 
   other carbon emitting activities. Anything really. 
+
+
+Questions for Thursday:
+- Difference between "Total output emission rates" and "Non-baseload emission rates" (eGrid)?
+- 
