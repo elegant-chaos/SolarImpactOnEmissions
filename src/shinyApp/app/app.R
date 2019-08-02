@@ -22,19 +22,28 @@ loadData <- function() {
 }
 
 # Load lookup tables
-usage_by_building_type <- read_csv("data/cleaned_building_type_usage.csv")
+usage_by_building_type <- read_csv("data/cleaned_building_type_usage.csv") %>%
+  # data wrangling better in preproc file, but place here so we don't have to re-run that on tight timeline
+  rename(building_type =`Principal building activity`) %>%
+  mutate(building_type = ifelse(building_type %in% c('Inpatient', 'Outpatient'),
+                                paste0('Health care, ', building_type),
+                                building_type)) %>%
+  # new file not on master yet, this is easiest for now
+  filter(!building_type %in% c('Health care', 'Mercantile'))
+
 commercial_zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv")
 emission_rates <- read_csv("data/total_output_emission_rates.csv")
 zip_to_egrid_region_lookup <- read_csv("data/egrid_region_zip_lookup.csv")
-
+zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv") %>%
+  mutate(Region = tolower(Region))
 
 # User input fields
 fields <- c("zip", "building_type","ind_ele_usage", "electric_usage", "pct_pwr_replaced")
 explore_fields <- c("explore_zip", "explore_building_type", "explore_ind_sq_ft", "explore_pct_pwr_replaced")
 
 # Temp vars until data loaded from EPA
-building_types <- c("Detached home or duplex", usage_by_building_type$`Principal building activity`)
-print(building_types)
+building_types <- c("Detached home or duplex", usage_by_building_type$building_type)
+
 # Shiny App
 shinyApp(
 
@@ -70,8 +79,8 @@ shinyApp(
                            ) # end sidebarLayout
 
                   ), # end  Explore
-                  # 'Data' page functionality is persistent storage-focused; save new cases to google sheet, visualize what's there
 
+                  # 'Data' page functionality is persistent storage-focused; save new cases to google sheet, visualize what's there
                   tabPanel('Data',
                            sidebarLayout(
                              sidebarPanel(
@@ -141,8 +150,8 @@ shinyApp(
 
         temp <- commercial_zip_to_region_lookup %>% filter(zip == z) %>%
           mutate(region = tolower(Region)) %>% left_join(usage_by_building_type, by = "region") %>%
-          select(`Principal building activity`, zip, region, electric_usage) %>%
-          filter(`Principal building activity` == b) %>% distinct() %>%
+          select(building_type, zip, region, electric_usage) %>%
+          filter(building_type == b) %>% distinct() %>%
           left_join(zip_to_egrid_region_lookup, by = 'zip') %>%
           left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
           select(egrid_region, CO2, CH4, N2O, CO2e)
@@ -196,6 +205,7 @@ shinyApp(
 
 
         if (input$explore_zip > 0) {
+          print(input$explore_zip)
           lookup <- zip_to_region_lookup %>% filter(zip == as.numeric(input$explore_zip))
           region <- zip_to_region_lookup %>% filter(zip == as.numeric(input$explore_zip)) %>% select(Region) %>% unlist %>% unname
 
@@ -204,24 +214,34 @@ shinyApp(
                             lookup %>% select(Region) %>% unlist %>% unname,
                             input$explore_building_type,
                             'type', sep = '_')
-
+          print(var_name)
           # from averages, get row specific to building type and select region column
-          lookup_value <- usage_by_building_type %>%
-            filter(building_type == input$building_type) %>%
-            select(!!region) %>% unlist %>% unname
+          if (input$explore_building_type == 'Detached home or duplex') {
 
-          df <- data.frame('zip' = input$explore_zip,
-                           'region' = region,
-                           'division' = lookup %>% select(Division) %>% unlist %>% unname,
-                           'building_type' = input$explore_building_type,
-                           "ind_sq_ft" = input$explore_ind_sq_ft,
-                           "sq_ft" = input$explore_sq_ft,
-                           "pct_pwr_replaced" = input$explore_pct_pwr_replaced,
-                           'Avg_use' =  lookup_value) %>% rename(!!var_name := Avg_use)
+            df <- data.frame('zip' = input$explore_zip,
+                             'region' = region,
+                             'division' = lookup %>% select(Division) %>% unlist %>% unname,
+                             'building_type' = input$explore_building_type,
+                             "ind_sq_ft" = input$explore_ind_sq_ft,
+                             "sq_ft" = input$explore_sq_ft,
+                             "pct_pwr_replaced" = input$explore_pct_pwr_replaced,
+                             'Avg_use' =  'TODO: attach home avg')
+          } else {
 
-        } else {
-          # the else condition just breaks. TODO: update
-          region <- 'zip not numeric'
+            lookup_value <- usage_by_building_type %>%
+              filter(building_type == input$explore_building_type,
+                     region == !!region) %>% select(electric_usage) %>% unlist %>% unname
+
+            df <- data.frame('zip' = input$explore_zip,
+                             'region' = region,
+                             'division' = lookup %>% select(Division) %>% unlist %>% unname,
+                             'building_type' = input$explore_building_type,
+                             "ind_sq_ft" = input$explore_ind_sq_ft,
+                             "sq_ft" = input$explore_sq_ft,
+                             "pct_pwr_replaced" = input$explore_pct_pwr_replaced,
+                             'Avg_use' =  lookup_value) %>% rename(!!var_name := Avg_use)
+
+          }
         }
       }}) # end exploreData
 
