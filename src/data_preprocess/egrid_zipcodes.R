@@ -8,10 +8,10 @@ library(readxl)
 egrid <- read.xlsx("data/egrid2016_summarytables.xlsx", 2, startRow=2)
 
 #use Zip-subregion sheet in excel file
-zipcode <- read_excel("data/power_profiler_zipcode_tool_2016_6_14_18._v8.xlsx", 
+zipcode <- read_excel("data/power_profiler_zipcode_tool_2016_6_14_18._v8.xlsx",
                                                           sheet = "Zip-subregion")
 
-#Reformat imported egrid 
+#Reformat imported egrid
 #_______________________________________________
 
 #delete last row that contains "created [date]"
@@ -87,11 +87,13 @@ usage_by_building_type <- read_csv("shinyApp/app/data/Total_usage_building_type.
 usage_by_building_type <- usage_by_building_type %>% mutate(northeast = `Total_usage_Avg_usage_North_East(thousand kwh)`,
                                                             midwest = Total_usage_Mid_West,
                                                             south = Total_usage_South,
-                                                            west = Total_usage_West) %>% 
+                                                            west = Total_usage_West) %>%
   select(`Principal building activity`, northeast, midwest, south, west) %>%
   gather(key = "region", value = "electric_usage", -`Principal building activity`)
 write_csv(usage_by_building_type, "shinyApp/app/data/cleaned_building_type_usage.csv")
 
+# move file into app data folder
+file.copy('data/zip_to_region_lookup.csv', 'src/shinyApp/app/data/', overwrite = T, recursive = T)
 #__________________________________________________
 
 #CODE for altered excel sheets
@@ -99,7 +101,7 @@ write_csv(usage_by_building_type, "shinyApp/app/data/cleaned_building_type_usage
 
 
 ##Looking at egrid2016_summarytables.xlsx, the column names read by R were unuseable.
-##The following code is for the altered excel sheets. The numbers refer to the sheet number 
+##The following code is for the altered excel sheets. The numbers refer to the sheet number
 ##where the altered table was saved
 
 #library(readxl)
