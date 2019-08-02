@@ -71,12 +71,26 @@ non_baseload_output_emission_rates<- non_baseload_output_emission_rates%>%
 
 #add grid loss, and acryonym subregion pair to separated tables
 total_output_emission_rates<- cbind(subregion,total_output_emission_rates,grid_gross_loss)
+write_csv(total_output_emission_rates, "shinyApp/app/data/total_output_emission_rates.csv")
 
 non_baseload_output_emission_rates<- cbind(subregion,non_baseload_output_emission_rates,grid_gross_loss)
+write_csv(non_baseload_output_emission_rates, "shinyApp/app/data/non_baseload_emission_rates.csv")
 
-# Load commerical building data
-usage_by_building_type <- read_csv("data/Total_usage_building_type.csv")
-zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv")
+# Clean and save zipcode data
+zipcode <- zipcode %>% select(`ZIP (numeric)`, state, `eGRID Subregion #1`) %>%
+  mutate(zip = `ZIP (numeric)`, egrid_region = `eGRID Subregion #1`) %>% select(zip, state, egrid_region)
+write_csv(zipcode, "shinyApp/app/data/egrid_region_zip_lookup.csv")
+
+
+# Clean and save usage_by_building_type
+usage_by_building_type <- read_csv("shinyApp/app/data/Total_usage_building_type.csv")
+usage_by_building_type <- usage_by_building_type %>% mutate(northeast = `Total_usage_Avg_usage_North_East(thousand kwh)`,
+                                                            midwest = Total_usage_Mid_West,
+                                                            south = Total_usage_South,
+                                                            west = Total_usage_West) %>% 
+  select(`Principal building activity`, northeast, midwest, south, west) %>%
+  gather(key = "region", value = "electric_usage", -`Principal building activity`)
+write_csv(usage_by_building_type, "shinyApp/app/data/cleaned_building_type_usage.csv")
 
 #__________________________________________________
 
