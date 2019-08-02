@@ -7,3 +7,4 @@ shinyApp/.httr-oauth-SUSPENDED
 shinyApp/app/.httr-oauth
 *.httr-oauth
 shinyApp/shinyApp.Rproj
+.httr-oauth
