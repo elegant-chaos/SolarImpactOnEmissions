@@ -39,7 +39,8 @@ zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv") %>%
 
 # User input fields
 fields <- c("zip", "building_type","ind_ele_usage", "electric_usage", "pct_pwr_replaced")
-explore_fields <- c("explore_zip", "explore_building_type", "explore_ind_sq_ft", "explore_pct_pwr_replaced")
+explore_fields <- c("explore_zip", "explore_building_type", "explore_ind_sq_ft", "explore_pct_pwr_replaced",
+                    "explore_electric_usage", "explore_pct_pwr_replaced")
 
 # Temp vars until data loaded from EPA
 building_types <- c("Detached home or duplex", usage_by_building_type$building_type)
@@ -55,14 +56,20 @@ shinyApp(
 
                            sidebarLayout(
                              sidebarPanel(
-                               helpText(p('Enter parameters for a case to explore.'), br(), p('Given zip code, building type, and building size (if known), how much carbon can a solar panel replace?')),
+                               helpText(p('Enter parameters for a case to explore.'), br(), p('Given zip code, building type, and building size and electricity usage (if known), how much carbon can a solar panel replace?')),
                                textInput("explore_zip", "Zip Code", ""),
                                selectInput('explore_building_type','Building Type', choices = building_types),
-                               conditionalPanel(condition = "input.explore_building_type == 'home' | input.explore_building_type == 'apartment'",
-                                                selectInput('explore_ind_sq_ft', 'Do you know the square footage of this building?',
+                               conditionalPanel(condition = "input.explore_building_type == 'Detached home or duplex'",
+                                                selectInput('explore_ind_sq_ft', 'Do you know the square footage of this home or duplex?',
                                                             choices = c('No', 'Yes'))),
                                conditionalPanel(condition = "input.explore_ind_sq_ft == 'Yes'",
                                                 numericInput('explore_sq_ft', 'Square Footage of Building', 1011)),
+
+                               selectInput('explore_ind_ele_usage', 'Do you know the average monthly electricity usage?',
+                                           choices = c('No, Use Average for Building Type', 'Yes')),
+                               conditionalPanel(condition = "input.explore_ind_ele_usage == 'Yes'",
+                                                numericInput('explore_electric_usage', 'Average Monthly Electricity Usage in Kilowatt Hours', 1011)),
+
                                sliderInput('explore_pct_pwr_replaced', "What percent of this building's power comes from renewable energy?",
                                            min = 1, max = 100, value = 100),
                                actionButton("explore", "Display results")
@@ -71,10 +78,8 @@ shinyApp(
                                tabsetPanel(type = "tabs",
                                            tabPanel("Estimated Power Saved",
                                                     titlePanel(h4("Input case:")),
-                                                    DT::dataTableOutput("cases_to_explore", width = 300), tags$hr()),
-
-
-                                           tabPanel("Placeholder",  titlePanel(h4('placeholder'))))
+                                                    DT::dataTableOutput("cases_to_explore", width = 300), tags$hr())),
+                                           tabPanel("Placeholder",  titlePanel(h4('placeholder')))
                              ) # end mainPanel
                            ) # end sidebarLayout
 
@@ -121,27 +126,34 @@ shinyApp(
     # appends carbon savings in kWh/month
     calc_carbon <- reactive({
 
-      print("I'm in the function")
+      # add logic to notice if inputs are 'Explore' (input$explore_zip) or 'Data' (input$zip)
+      if (input$zip > 0) {
+        print('persistent zip')
+        z <- as.numeric(input$zip)
+        b <- input$building_type
+        i <- input$ind_ele_usage
+        e <- input$electric_usage
+        p <- input$pct_pwr_replaced
+      } else {
+        print('explore zip')
+        z <- as.numeric(input$explore_zip)
+        b <- input$explore_building_type
+        i <- input$explore_ind_ele_usage
+        e <- input$explore_electric_usage
+        p <- input$explore_pct_pwr_replaced
+      }
 
-      z <- as.numeric(input$zip)
-      b <- input$building_type
-      i <- input$ind_ele_usage
-      e <- input$electric_usage
-      p <- input$pct_pwr_replaced
+      # check returned values
+      print(paste("i", i))
+      print(paste("e:", e))
+      print(paste("p:", p))
 
       if(b == 'Detached home or duplex'){
         temp <- zip_to_egrid_region_lookup %>% filter(zip == z) %>%
           left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
           select(egrid_region, CO2, CH4, N2O, CO2e)
-        print(temp)
 
-        values$carbon_savings <- temp$CO2[1]*0.001*e*p*.01
-        print("temp$CO2[1]")
-        print(temp$CO2[1])
-        print("e")
-        print(e)
-        print("p")
-        print(p)
+        values$carbon_savings <- round(temp$CO2[1]*0.001*e*p*.01, 3)
 
         print("In first if")
         print(values$carbon_savings)
@@ -154,11 +166,12 @@ shinyApp(
           filter(building_type == b) %>% distinct() %>%
           left_join(zip_to_egrid_region_lookup, by = 'zip') %>%
           left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
-          select(egrid_region, CO2, CH4, N2O, CO2e)
+          select(egrid_region, CO2, CH4, N2O, CO2e, electric_usage)
+        print(temp)
 
-
-        values$carbon_savings <- temp$electric_usage*(1/12)*1000*temp$CO2*0.001*p*.01
+        values$carbon_savings <- round(temp$electric_usage*(1/12)*1000*temp$CO2*0.001*p*.01, 3)
       }
+
     })
 
     # When the Submit button is clicked, save the form data
@@ -203,9 +216,8 @@ shinyApp(
     exploreData = reactive({
       if(input$explore > 0) {
 
-
         if (input$explore_zip > 0) {
-          print(input$explore_zip)
+
           lookup <- zip_to_region_lookup %>% filter(zip == as.numeric(input$explore_zip))
           region <- zip_to_region_lookup %>% filter(zip == as.numeric(input$explore_zip)) %>% select(Region) %>% unlist %>% unname
 
@@ -214,7 +226,7 @@ shinyApp(
                             lookup %>% select(Region) %>% unlist %>% unname,
                             input$explore_building_type,
                             'type', sep = '_')
-          print(var_name)
+
           # from averages, get row specific to building type and select region column
           if (input$explore_building_type == 'Detached home or duplex') {
 
@@ -240,24 +252,31 @@ shinyApp(
                              "sq_ft" = input$explore_sq_ft,
                              "pct_pwr_replaced" = input$explore_pct_pwr_replaced,
                              'Avg_use' =  lookup_value) %>% rename(!!var_name := Avg_use)
-
           }
         }
       }}) # end exploreData
 
+
     # When the Explore button is clicked, format and display output
     observeEvent(input$explore, {
-      explore_data <- exploreData()
-    })
-
-    output$case_to_explore <- renderText({
-      exploreData()
+      #explore_data <- exploreData()
+      calc_carbon()
+      dat <- c(exploreData(), values$carbon_savings, date())
     })
 
     # display input case formatted as table, with appended average energy use info
     output$cases_to_explore <- DT::renderDataTable({
-      input$explore
-      exploreData()
+      if (input$explore > 0) {
+        input$explore
+        calc_carbon()
+        print(values$carbon_savings)
+        data <- exploreData()
+        data$carbon_savings <- values$carbon_savings
+
+      } else {
+        data <- data.frame('zip' = 'Please enter zip', carbon_savings = 'No estimate yet')
+      }
+      return(data)
     })
   }
 )
