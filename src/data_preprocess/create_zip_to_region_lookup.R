@@ -63,10 +63,10 @@ lookup <- zips_to_county_FIPS %>%
                               .$State_name == 'Puerto Rico' ~ 'Puerto Rico',
                               .$zip %in% c('00802', '00820', '00830', '00840', '00850') ~ 'St. Thomas/Virgin Isl',
                               T ~ 'NA')) %>% 
-         mutate(Region = case_when(.$Division %in% c('New England', 'Mid-Atlantic') ~ 'Northeast',
-                            .$Division %in% c('East North Central','West North Central') ~ 'Midwest',
-                            .$Division %in% c('South Atlantic', 'East South Central', 'West South Central') ~ 'South',
-                            .$Division %in% c('Mountain', 'Pacific') ~ 'West',
+         mutate(Region = case_when(.$Division %in% c('New England', 'Mid-Atlantic') ~ 'northeast',
+                            .$Division %in% c('East North Central','West North Central') ~ 'midwest',
+                            .$Division %in% c('South Atlantic', 'East South Central', 'West South Central') ~ 'south',
+                            .$Division %in% c('Mountain', 'Pacific') ~ 'west',
                             .$State_name == 'Puerto Rico' ~ 'Puerto Rico',
                             .$zip %in% c('00802', '00820', '00830', '00840', '00850') ~ 'St. Thomas/Virgin Isl',
                             T ~ 'NA')) %>%

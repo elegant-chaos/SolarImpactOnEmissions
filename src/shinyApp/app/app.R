@@ -22,7 +22,8 @@ loadData <- function() {
 
 # Load lookup tables
 usage_by_building_type <- read_csv("data/cleaned_building_type_usage.csv")
-commercial_zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv")
+commercial_zip_to_region_lookup <- read_csv("data/zip_to_region_lookup.csv") %>% mutate(region = tolower(Region)) %>%
+    select(-Region)
 emission_rates <- read_csv("data/total_output_emission_rates.csv")
 zip_to_egrid_region_lookup <- read_csv("data/egrid_region_zip_lookup.csv")
 
@@ -54,7 +55,7 @@ shinyApp(
         ),
         mainPanel(
             tabsetPanel(type = "tabs",
-                        tabPanel("Placeholder 1", plotlyOutput("plot1")),
+                        tabPanel("Carbon Savings Over Time", plotlyOutput("plot1"), plotlyOutput("plot2")),
                         tabPanel("Placeholder 2"),
                         tabPanel("Data Table", DT::dataTableOutput("responses", width = 300), tags$hr())
         ))
@@ -74,8 +75,6 @@ shinyApp(
         # appends carbon savings in kWh/month
         calc_carbon <- reactive({
             
-            print("I'm in the function")
-            
             z <- as.numeric(input$zip)
             b <- input$building_type
             i <- input$ind_ele_usage
@@ -86,31 +85,27 @@ shinyApp(
                 temp <- zip_to_egrid_region_lookup %>% filter(zip == z) %>%
                     left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
                     select(egrid_region, CO2, CH4, N2O, CO2e)
-                print(temp)
 
                 values$carbon_savings <- temp$CO2[1]*0.001*e*p*.01
-                print("temp$CO2[1]")
-                print(temp$CO2[1])
-                print("e")
-                print(e)
-                print("p")
-                print(p)
                 
-                print("In first if")
-                print(values$carbon_savings)
-                
+            } else if(i != 'Yes') {
+
+                temp <- commercial_zip_to_region_lookup %>% filter(zip == z) %>%
+                    left_join(usage_by_building_type, by = "region") %>%
+                    select(`Principal building activity`, zip, region, electric_usage) %>%
+                    filter(`Principal building activity` == b) %>% distinct() %>%
+                    left_join(zip_to_egrid_region_lookup, by = 'zip') %>%
+                    left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
+                    select(egrid_region, CO2, CH4, N2O, CO2e, electric_usage)
+
+                values$carbon_savings <- temp$electric_usage[1]*(1/12)*1000*temp$CO2[1]*0.001*p*.01
             } else {
-
-             temp <- commercial_zip_to_region_lookup %>% filter(zip == z) %>%
-                mutate(region = tolower(Region)) %>% left_join(usage_by_building_type, by = "region") %>%
-                select(`Principal building activity`, zip, region, electric_usage) %>%
-                filter(`Principal building activity` == b) %>% distinct() %>%
-                left_join(zip_to_egrid_region_lookup, by = 'zip') %>%
-                left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
-                select(egrid_region, CO2, CH4, N2O, CO2e)
-
-
-             values$carbon_savings <- temp$electric_usage*(1/12)*1000*temp$CO2*0.001*p*.01
+                temp <- commercial_zip_to_region_lookup %>% filter(zip == z) %>%
+                    left_join(zip_to_egrid_region_lookup, by = 'zip') %>%
+                    left_join(emission_rates, by = c("egrid_region" = "eGRID.subregion.acronym")) %>%
+                    select(egrid_region, CO2, CH4, N2O, CO2e)
+                
+                values$carbon_savings <- e*(1/12)*1000*temp$CO2[1]*0.001*p*.01
             }
         })
         
@@ -128,25 +123,30 @@ shinyApp(
             loadData()
         })
         
-        # The following plot is a placeholder
-        # Can use a line plot of this type to show the emissions savings for 
-        # all 3 emissions types listed in the eGrid data over time.
-        # X axis -> month
-        # Y axis -> emissions
-        # color -> emission type (carbon, etc.)
-        # (Above instructions just one idea. I'm sure many good ideas exist in this space.)
-        
-        trace_0 <- rnorm(100, mean = 5)
-        trace_1 <- rnorm(100, mean = 0)
-        trace_2 <- rnorm(100, mean = -5)
-        x <- c(1:100)
-        
-        data <- data.frame(x, trace_0, trace_1, trace_2)
+        data <- data.frame(loadData()) %>% rowid_to_column(var = "ID")
+        data <- data %>% select(carbon_savings, ID) %>% 
+            mutate(month1 = 1, month2 = 2, month3 = 3, month4 = 4, month5 = 5, month6 = 6, 
+                   month7 = 7, month8 = 8, month9 = 9, month10 = 10, month11 = 11, month12 = 12) %>%
+            gather(key = "month_name", value = "month", -carbon_savings, -ID) %>% 
+            mutate(cum_savings = month*carbon_savings) # %>% group_by(month) %>%
+            #summarise(cum_savings = sum(cum_savings))
+        print(data)
         
         output$plot1 <- renderPlotly({
-            plot_ly(data, x = ~x, y = ~trace_0, name = 'trace 0', type = 'scatter', mode = 'lines') %>%
-            add_trace(y = ~trace_1, name = 'trace 1', mode = 'lines+markers') %>%
-            add_trace(y = ~trace_2, name = 'trace 2', mode = 'markers')
+            #ggplot(data) + geom_line(aes(x = month, y = cum_savings, color = as.factor(ID)))
+            plot_ly(data, x = ~month, y = ~cum_savings, color = ~as.factor(ID), mode = 'lines+markers') %>%
+                layout(xaxis = list(title = ""), 
+                       yaxis = list(title = "Carbon Savings"),
+                       title = "Carbon Savings by Solar Installation")
+        }) 
+        
+        data2 <- data %>% group_by(month) %>% summarise(total_savings = sum(cum_savings))
+        
+        output$plot2 <- renderPlotly({
+            plot_ly(data2, x = ~month, y=~total_savings, mode = 'lines+markers') %>%
+                layout(xaxis = list(title = "Months Since Installation"), 
+                       yaxis = list(title = "Carbon Savings"),
+                       title = "Overall Carbon Savings")
         })
     }
 )
